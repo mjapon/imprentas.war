@@ -3,10 +3,14 @@ package org.imprentas.sys.servlets;
 import net.sf.jasperreports.engine.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.imprentas.sys.dao.TJobDocHome;
+import org.imprentas.sys.dao.TParamsHome;
 import org.imprentas.sys.dao.TplantillaHome;
 import org.imprentas.sys.entity.TplantillaEntity;
+import org.imprentas.sys.util.DbUtil;
 import org.imprentas.sys.util.JPAUtil;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
@@ -14,13 +18,9 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +35,6 @@ public class ReporteServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         log.info("Inicia  doGet ReporteServlet--->");
-//        String jasperTemplate = "C:\\dev\\proyecto_imprentas\\dynamicjasper\\dynamicjasper\\FacturaA4.jrxml";
-
         try {
 
             String desde = request.getParameter("desde");
@@ -48,7 +46,9 @@ public class ReporteServlet extends HttpServlet {
 
             EntityManagerFactory entityManagerFactory = JPAUtil.getEntityManagerFactoryComp();
 
-            TplantillaHome tplantillaHome = new TplantillaHome(entityManagerFactory.createEntityManager());
+            EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+            TplantillaHome tplantillaHome = new TplantillaHome(entityManager);
 
             TplantillaEntity tplantillaEntity = tplantillaHome.findByCod(Integer.valueOf(codigoRep));
 
@@ -72,44 +72,37 @@ public class ReporteServlet extends HttpServlet {
             parametros.put("tipo", Integer.valueOf(tipocopia));
 
             //Se crea conexion a la base de datos
-            Connection conexion = null;
-            try {
-                Class.forName("org.postgresql.Driver");
-                conexion = DriverManager.getConnection("jdbc:postgresql://localhost:5432/imprentadb", "postgres", "postgres");
-                System.out.println("Conexion creada con la base de datos--->");
-            } catch (Exception e) {
-                log.error(String.format("Error al crear la conexion a la base de datos %s", e.getMessage()),e);
-                e.printStackTrace();
-            }
+            Connection conexion = DbUtil.getDbConecction();
 
-            // Passagem dos parâmetros e preenchimento do relatório - informamos um
-            // datasource vazio, pois a query do relatório irá trazer os dados.
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-//            jasperPrint.set
-
-            // Exportar o relatório para PDF.
-            //byte[] pdfbytes = JasperExportManager.exportReportToPdf(jasperPrint);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             ServletOutputStream sos = response.getOutputStream();
             response.setContentType("application/pdf");
+
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
-            response.setHeader("Content-Sisposition", "inline,filename=prueba");
+            TParamsHome tParamsHome = new TParamsHome(entityManager);
+
+            String pathSaveJob = tParamsHome.getPathSaveJobs();
+            String filename = String.format("job_%s.pdf", jobid);
+
+            String fullPathFile = String.format("%s%s%s", pathSaveJob, File.separator, filename);
+            TJobDocHome jobDocHome = new TJobDocHome(entityManager);
+            jobDocHome.saveOrUpdate(Integer.valueOf(jobid), fullPathFile);
+
+            byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
+
+            OutputStream out = new FileOutputStream(fullPathFile);
+            out.write(pdfBytes);
+            out.close();
+            //JasperExportManager.exportReportToPdfFile(fullPathFile);
+
+            response.setHeader("Content-Sisposition", String.format("inline,filename=%s", filename));
 
             sos.flush();
             sos.close();
-
-            /*
-            try{
-                JPAUtil.shutdown();
-            }
-            catch (Throwable ex){
-                log.error(String.format("Error al ejecutar cierre db:%s", ex.getMessage(),ex));
-            }
-            */
-
         } catch (Throwable ex) {
             log.error(String.format("error al generar el servlet del reporte: %s", ex.getMessage()));
             System.out.println(String.format("error al generar el servlet del reporte: %s", ex.getMessage()));

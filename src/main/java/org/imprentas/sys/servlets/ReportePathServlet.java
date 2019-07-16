@@ -1,11 +1,12 @@
 package org.imprentas.sys.servlets;
 
 
-import org.apache.commons.logging.LogFactory;
 import net.sf.jasperreports.engine.*;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.imprentas.sys.dao.TplantillaHome;
 import org.imprentas.sys.entity.TplantillaEntity;
+import org.imprentas.sys.util.DbUtil;
 import org.imprentas.sys.util.JPAUtil;
 
 import javax.persistence.EntityManagerFactory;
@@ -15,10 +16,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,7 +35,6 @@ public class ReportePathServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         log.info("Inicia  doGet ReporteServlet--->");
-//        String jasperTemplate = "C:\\dev\\proyecto_imprentas\\dynamicjasper\\dynamicjasper\\FacturaA4.jrxml";
 
         try {
 
@@ -67,26 +67,10 @@ public class ReportePathServlet extends HttpServlet {
             parametros.put("pGeneradoPor", pGeneradoPor);
             parametros.put("pParamDesc", paramdesc);
 
-            //Se crea conexion a la base de datos
-            Connection conexion = null;
-            try {
-                Class.forName("org.postgresql.Driver");
-                conexion = DriverManager.getConnection("jdbc:postgresql://localhost:5432/imprentadb", "postgres", "postgres");
-                System.out.println("Conexion creada con la base de datos--->");
-            } catch (Exception e) {
-                log.error(String.format("Error al crear la conexion a la base de datos %s", e.getMessage()),e);
-                e.printStackTrace();
-            }
+            Connection conexion = DbUtil.getDbConecction();
 
-            // Passagem dos parâmetros e preenchimento do relatório - informamos um
-            // datasource vazio, pois a query do relatório irá trazer os dados.
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-//            jasperPrint.set
-
-            // Exportar o relatório para PDF.
-            //byte[] pdfbytes = JasperExportManager.exportReportToPdf(jasperPrint);
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             ServletOutputStream sos = response.getOutputStream();
             response.setContentType("application/pdf");
@@ -96,15 +80,6 @@ public class ReportePathServlet extends HttpServlet {
 
             sos.flush();
             sos.close();
-
-            /*
-            try{
-                JPAUtil.shutdown();
-            }
-            catch (Throwable ex){
-                log.error(String.format("Error al ejecutar cierre db:%s", ex.getMessage(),ex));
-            }
-            */
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar el servlet del reporte: %s", ex.getMessage()));
