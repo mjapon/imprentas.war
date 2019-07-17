@@ -8,6 +8,8 @@ import org.apache.commons.logging.LogFactory;
 
 import org.imprentas.sys.entity.TplantillaEntity;
 
+import java.sql.Connection;
+
 public class TplantillaHome {
 	
 private static final Log log = LogFactory.getLog(TplantillaHome.class);
@@ -31,5 +33,12 @@ private static final Log log = LogFactory.getLog(TplantillaHome.class);
 			log.error("get failed", re);
 			throw re;
 		}
+	}
+
+	public Connection getConnection() {
+
+		java.sql.Connection connection = entityManager.unwrap(java.sql.Connection.class);
+		return connection;
+
 	}
 }

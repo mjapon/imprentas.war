@@ -13,7 +13,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
       <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/imprentadb" />
       <property name="javax.persistence.jdbc.user" value="postgres" />
-      <property name="javax.persistence.jdbc.password" value="postgres" />
+      <property name="javax.persistence.jdbc.password" value="root" />
       
       <property name="hibernate.show_sql" value="true" />
       <property name="hibernate.hbm2ddl.auto" value="validate" />

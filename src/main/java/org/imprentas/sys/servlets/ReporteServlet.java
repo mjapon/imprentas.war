@@ -55,7 +55,7 @@ public class ReporteServlet extends HttpServlet {
             InputStream inputStream = null;
 
             if (tplantillaEntity != null) {
-                System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
+                //System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
 
                 String plantilla = tplantillaEntity.getTempJrxml();
                 inputStream = new ByteArrayInputStream(plantilla.getBytes(Charset.forName("UTF-8")));
@@ -73,6 +73,7 @@ public class ReporteServlet extends HttpServlet {
 
             //Se crea conexion a la base de datos
             Connection conexion = DbUtil.getDbConecction();
+            //Connection conexion = tplantillaHome.getConnection();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
@@ -89,6 +90,10 @@ public class ReporteServlet extends HttpServlet {
             String filename = String.format("job_%s.pdf", jobid);
 
             String fullPathFile = String.format("%s%s%s", pathSaveJob, File.separator, filename);
+            if (pathSaveJob.endsWith(File.separator)) {
+                fullPathFile = String.format("%s%s", pathSaveJob, filename);
+            }
+
             TJobDocHome jobDocHome = new TJobDocHome(entityManager);
             jobDocHome.saveOrUpdate(Integer.valueOf(jobid), fullPathFile);
 
@@ -97,7 +102,6 @@ public class ReporteServlet extends HttpServlet {
             OutputStream out = new FileOutputStream(fullPathFile);
             out.write(pdfBytes);
             out.close();
-            //JasperExportManager.exportReportToPdfFile(fullPathFile);
 
             response.setHeader("Content-Sisposition", String.format("inline,filename=%s", filename));
 

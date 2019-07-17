@@ -52,10 +52,9 @@ public class ReportePathServlet extends HttpServlet {
             InputStream inputStream = null;
 
             if (tplantillaEntity != null) {
-                System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
-
+                //System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
                 String plantilla = tplantillaEntity.getTempJrxml();
-                inputStream = new FileInputStream(tplantillaEntity.getTempJrxml());
+                inputStream = new FileInputStream(plantilla);
             }
 
             // Compila o template
@@ -67,7 +66,9 @@ public class ReportePathServlet extends HttpServlet {
             parametros.put("pGeneradoPor", pGeneradoPor);
             parametros.put("pParamDesc", paramdesc);
 
+
             Connection conexion = DbUtil.getDbConecction();
+            //Connection conexion = tplantillaHome.getConnection();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 

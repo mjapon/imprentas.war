@@ -15,6 +15,7 @@ public class TjobdocEntity {
 
     @Id
     @Column(name = "tjd_id")
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
     public int getTjdId() {
         return tjdId;
     }
