@@ -11,8 +11,8 @@ import javax.ws.rs.core.Response;
 
 public class RestClient {
 
-    private static String REST_URI
-            = "http://localhost:6543/rest/jobdoc";
+    //private static String REST_URI = "http://localhost:6543/rest/jobdoc";
+    private static String REST_URI = "http://157.230.129.131:6543/rest/jobdoc";
 
     private Client client = ClientBuilder.newClient();
 

@@ -82,6 +82,7 @@ public class ReportePathServlet extends HttpServlet {
 
             sos.flush();
             sos.close();
+            conexion.close();
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar el servlet del reporte: %s", ex.getMessage()));
