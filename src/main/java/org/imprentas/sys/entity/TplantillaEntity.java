@@ -8,6 +8,9 @@ public class TplantillaEntity {
     private int tempId;
     private String tempName;
     private String tempJrxml;
+    private Integer tempTipo;
+    private String tempDesc;
+    private String tempParams;
 
     @Id
     @Column(name = "temp_id")
@@ -37,6 +40,36 @@ public class TplantillaEntity {
 
     public void setTempJrxml(String tempJrxml) {
         this.tempJrxml = tempJrxml;
+    }
+
+    @Basic
+    @Column(name = "temp_tipo")
+    public Integer getTempTipo() {
+        return tempTipo;
+    }
+
+    public void setTempTipo(Integer tempTipo) {
+        this.tempTipo = tempTipo;
+    }
+
+    @Basic
+    @Column(name = "temp_desc")
+    public String getTempDesc() {
+        return tempDesc;
+    }
+
+    public void setTempDesc(String tempDesc) {
+        this.tempDesc = tempDesc;
+    }
+
+    @Basic
+    @Column(name = "temp_params")
+    public String getTempParams() {
+        return tempParams;
+    }
+
+    public void setTempParams(String tempParams) {
+        this.tempParams = tempParams;
     }
 
     @Override

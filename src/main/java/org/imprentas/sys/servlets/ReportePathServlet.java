@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,44 +32,44 @@ public class ReportePathServlet extends HttpServlet {
 
     private static final Log log = LogFactory.getLog(ReportePathServlet.class);
 
+    private String removeComillas(String cadena) {
+        if (cadena.startsWith("\"")) {
+            cadena = cadena.substring(1);
+        }
+        if (cadena.endsWith("\"")) {
+            cadena = cadena.substring(0,cadena.length()-1);
+        }
+        return cadena;
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         log.info("Inicia  doGet ReporteServlet--->");
 
         try {
-
-            String pfechaGen = new SimpleDateFormat("dd/MM/yyyy hh:mm a").format(new Date());
-            String pGeneradoPor = request.getParameter("generadopor");
-            String paramdesc = request.getParameter("paramdesc");
             String codigoRep = request.getParameter("codigorep");
+            String emp_esquema = request.getParameter("emp_esquema");
 
-            EntityManagerFactory entityManagerFactory = JPAUtil.getEntityManagerFactoryComp();
+            Map parametros = new HashMap();
+            Enumeration<String> paramsNames = request.getParameterNames();
+            while (paramsNames.hasMoreElements()) {
+                String key = paramsNames.nextElement();
+                parametros.put(key, request.getParameterValues(key)[0]);
+            }
 
-            TplantillaHome tplantillaHome = new TplantillaHome(entityManagerFactory.createEntityManager());
-
-            TplantillaEntity tplantillaEntity = tplantillaHome.findByCod(Integer.valueOf(codigoRep));
+            RestClient restClient = new RestClient();
 
             InputStream inputStream = null;
 
-            if (tplantillaEntity != null) {
-                //System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
-                String plantilla = tplantillaEntity.getTempJrxml();
-                inputStream = new FileInputStream(plantilla);
-            }
+            String plantilla =  restClient.getTempJrxml(emp_esquema, Integer.valueOf(codigoRep));
+            plantilla = removeComillas(plantilla);
+            inputStream = new FileInputStream(plantilla);
 
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(inputStream);
 
-            //Configuarcion de parametros
-            Map parametros = new HashMap();
-            parametros.put("pFechaGen", pfechaGen);
-            parametros.put("pGeneradoPor", pGeneradoPor);
-            parametros.put("pParamDesc", paramdesc);
-
-
             Connection conexion = DbUtil.getDbConecction();
-            //Connection conexion = tplantillaHome.getConnection();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 

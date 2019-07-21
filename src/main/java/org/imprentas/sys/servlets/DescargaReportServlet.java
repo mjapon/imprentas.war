@@ -1,13 +1,8 @@
 package org.imprentas.sys.servlets;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.imprentas.sys.dao.TJobDocHome;
-import org.imprentas.sys.entity.TjobdocEntity;
-import org.imprentas.sys.util.JPAUtil;
 
-import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -23,21 +18,34 @@ public class DescargaReportServlet extends HttpServlet {
 
     private static final Log log = LogFactory.getLog(DescargaReportServlet.class);
 
+    private String removeComillas(String cadena) {
+        if (cadena.startsWith("\"")) {
+            cadena = cadena.substring(1);
+        }
+        if (cadena.endsWith("\"")) {
+            cadena = cadena.substring(0,cadena.length()-1);
+        }
+        return cadena;
+    }
+
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
             String codJob = request.getParameter("codjob");
+            String emp_esquema = request.getParameter("emp_esquema");
 
-            EntityManagerFactory entityManagerFactory = JPAUtil.getEntityManagerFactoryComp();
+            RestClient restClient = new RestClient();
 
-            TJobDocHome jobDocHome = new TJobDocHome(entityManagerFactory.createEntityManager());
+            String rutaFile = restClient.getPathDocSaved(emp_esquema, codJob);
 
-            TjobdocEntity tJobDoc = jobDocHome.findByCodJob(Integer.valueOf(codJob));
-            String rutaFile =  tJobDoc.getTjdRuta();
+            rutaFile = removeComillas(rutaFile);
 
+            /*
             String filename =  rutaFile.substring(rutaFile.lastIndexOf(File.separator));
-            String pdfFileName = filename;
+            //String pdfFileName = filename;
+             */
 
             File pdfFile = new File(rutaFile);
 

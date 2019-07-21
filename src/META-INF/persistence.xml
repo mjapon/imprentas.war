@@ -8,6 +8,8 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 
   <persistence-unit name="COMP_UNIT">
     <description> Hibernate JPA Configuration Example</description>
+    <jta-data-source>java:/comp/env/jdbc/ImprentasDB</jta-data-source>
+    <!--
     <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
     <properties>
       <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
@@ -20,6 +22,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
       <property name="hibernate.default_schema" value="public"/>
     </properties>
+    -->
   </persistence-unit>
 
   

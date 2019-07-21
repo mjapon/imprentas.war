@@ -33,6 +33,16 @@ public class ReporteServlet extends HttpServlet {
 
     }
 
+    private String removeComillas(String cadena) {
+        if (cadena.startsWith("\"")) {
+            cadena = cadena.substring(1);
+        }
+        if (cadena.endsWith("\"")) {
+            cadena = cadena.substring(0,cadena.length()-1);
+        }
+        return cadena;
+    }
+
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         log.info("Inicia  doGet ReporteServlet--->");
         try {
@@ -42,8 +52,12 @@ public class ReporteServlet extends HttpServlet {
             String codigoRep = request.getParameter("codrep");
             String tipocopia = request.getParameter("tipocopia");
             String jobid = request.getParameter("jobid");
+            String emp_esquema = request.getParameter("emp_esquema");
+
+            RestClient restClient = new RestClient();
 
 
+            /*
             EntityManagerFactory entityManagerFactory = JPAUtil.getEntityManagerFactoryComp();
 
             EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -51,15 +65,35 @@ public class ReporteServlet extends HttpServlet {
             TplantillaHome tplantillaHome = new TplantillaHome(entityManager);
 
             TplantillaEntity tplantillaEntity = tplantillaHome.findByCod(Integer.valueOf(codigoRep));
+            */
 
             InputStream inputStream = null;
 
-            if (tplantillaEntity != null) {
+            //if (tplantillaEntity != null) {
                 //System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
 
-                String plantilla = tplantillaEntity.getTempJrxml();
-                inputStream = new ByteArrayInputStream(plantilla.getBytes(Charset.forName("UTF-8")));
+                //String plantilla = tplantillaEntity.getTempJrxml();
+
+            //String plantilla = restClient.getTempJrxml(emp_esquema, Integer.valueOf(codigoRep));
+
+            String plantilla =  restClient.getTempJrxml(emp_esquema, Integer.valueOf(codigoRep));
+
+            /*
+            if (plantilla.startsWith("\"")) {
+                plantilla = plantilla.substring(1);
             }
+            if (plantilla.endsWith("\"")) {
+                plantilla = plantilla.substring(0,plantilla.length()-1);
+            }
+            */
+            plantilla = removeComillas(plantilla);
+
+            System.out.println("Valor de plantilla es");
+            System.out.println(plantilla);
+            inputStream = new FileInputStream(plantilla);
+
+                //inputStream = new ByteArrayInputStream(plantilla.getBytes(Charset.forName("UTF-8")));
+            //}
 
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(inputStream);
@@ -70,6 +104,7 @@ public class ReporteServlet extends HttpServlet {
             parametros.put("hasta", Integer.valueOf(hasta));
             parametros.put("jobid", Integer.valueOf(jobid));
             parametros.put("tipo", Integer.valueOf(tipocopia));
+            parametros.put("emp_esquema", emp_esquema);
 
             //Se crea conexion a la base de datos
             Connection conexion = DbUtil.getDbConecction();
@@ -84,18 +119,29 @@ public class ReporteServlet extends HttpServlet {
 
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
-            TParamsHome tParamsHome = new TParamsHome(entityManager);
+            //TParamsHome tParamsHome = new TParamsHome(entityManager);
 
-            String pathSaveJob = tParamsHome.getPathSaveJobs();
+            //String pathSaveJob = tParamsHome.getPathSaveJobs();
+            String pathSaveJob = restClient.getPathSaveDoc(emp_esquema);
+
+            pathSaveJob = removeComillas(pathSaveJob);
+
+            System.out.println("Path save doc-->");
+            System.out.println(pathSaveJob);
+
+
             String filename = String.format("job_%s.pdf", jobid);
+
 
             String fullPathFile = String.format("%s%s%s", pathSaveJob, File.separator, filename);
             if (pathSaveJob.endsWith(File.separator)) {
                 fullPathFile = String.format("%s%s", pathSaveJob, filename);
             }
 
-            TJobDocHome jobDocHome = new TJobDocHome(entityManager);
-            jobDocHome.saveOrUpdate(Integer.valueOf(jobid), fullPathFile);
+
+            //TJobDocHome jobDocHome = new TJobDocHome(entityManager);
+            //jobDocHome.saveOrUpdate(Integer.valueOf(jobid), fullPathFile);
+            restClient.saveOrUpdateDoc(emp_esquema, Integer.valueOf(jobid), filename);
 
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);
 
