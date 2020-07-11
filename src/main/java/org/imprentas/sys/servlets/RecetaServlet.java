@@ -45,7 +45,7 @@ public class RecetaServlet extends HttpServlet {
             response.setContentType("application/pdf");
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
-            response.setHeader("Content-Disposition", "inline,filename=receta");
+            response.setHeader("Content-disposition","inline; filename=receta");
 
             sos.flush();
             sos.close();

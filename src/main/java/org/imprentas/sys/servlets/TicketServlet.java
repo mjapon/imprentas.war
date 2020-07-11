@@ -45,10 +45,11 @@ public class TicketServlet extends HttpServlet {
 
 
             ServletOutputStream sos = response.getOutputStream();
-            response.setContentType("application/pdf");
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
-            response.setHeader("Content-Disposition", "inline,filename=ticket");
+            response.setContentType("application/pdf");
+            response.setHeader("Content-disposition","inline; filename=ticket");
+
 
             sos.flush();
             sos.close();
