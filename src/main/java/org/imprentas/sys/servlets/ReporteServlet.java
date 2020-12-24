@@ -3,15 +3,8 @@ package org.imprentas.sys.servlets;
 import net.sf.jasperreports.engine.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.imprentas.sys.dao.TJobDocHome;
-import org.imprentas.sys.dao.TParamsHome;
-import org.imprentas.sys.dao.TplantillaHome;
-import org.imprentas.sys.entity.TplantillaEntity;
 import org.imprentas.sys.util.DbUtil;
-import org.imprentas.sys.util.JPAUtil;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
@@ -19,7 +12,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,13 +30,12 @@ public class ReporteServlet extends HttpServlet {
             cadena = cadena.substring(1);
         }
         if (cadena.endsWith("\"")) {
-            cadena = cadena.substring(0,cadena.length()-1);
+            cadena = cadena.substring(0, cadena.length() - 1);
         }
         return cadena;
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        log.info("Inicia  doGet ReporteServlet--->");
         try {
 
             String desde = request.getParameter("desde");
@@ -56,46 +47,14 @@ public class ReporteServlet extends HttpServlet {
 
             RestClient restClient = new RestClient();
 
-
-            /*
-            EntityManagerFactory entityManagerFactory = JPAUtil.getEntityManagerFactoryComp();
-
-            EntityManager entityManager = entityManagerFactory.createEntityManager();
-
-            TplantillaHome tplantillaHome = new TplantillaHome(entityManager);
-
-            TplantillaEntity tplantillaEntity = tplantillaHome.findByCod(Integer.valueOf(codigoRep));
-            */
-
             InputStream inputStream = null;
 
-            //if (tplantillaEntity != null) {
-                //System.out.println(String.format("Tplantillaentity value es:%s", tplantillaEntity.getTempJrxml()));
+            String plantilla = restClient.getTempJrxml(emp_esquema, Integer.valueOf(codigoRep));
 
-                //String plantilla = tplantillaEntity.getTempJrxml();
-
-            //String plantilla = restClient.getTempJrxml(emp_esquema, Integer.valueOf(codigoRep));
-
-            String plantilla =  restClient.getTempJrxml(emp_esquema, Integer.valueOf(codigoRep));
-
-            /*
-            if (plantilla.startsWith("\"")) {
-                plantilla = plantilla.substring(1);
-            }
-            if (plantilla.endsWith("\"")) {
-                plantilla = plantilla.substring(0,plantilla.length()-1);
-            }
-            */
             plantilla = removeComillas(plantilla);
 
-            System.out.println("Valor de plantilla es");
-            System.out.println(plantilla);
             inputStream = new FileInputStream(plantilla);
 
-                //inputStream = new ByteArrayInputStream(plantilla.getBytes(Charset.forName("UTF-8")));
-            //}
-
-            // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(inputStream);
 
             //Configuarcion de parametros
@@ -108,26 +67,17 @@ public class ReporteServlet extends HttpServlet {
 
             //Se crea conexion a la base de datos
             Connection conexion = DbUtil.getDbConecction();
-            //Connection conexion = tplantillaHome.getConnection();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             ServletOutputStream sos = response.getOutputStream();
             response.setContentType("application/pdf");
 
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
-            //TParamsHome tParamsHome = new TParamsHome(entityManager);
-
-            //String pathSaveJob = tParamsHome.getPathSaveJobs();
             String pathSaveJob = restClient.getPathSaveDoc(emp_esquema);
 
             pathSaveJob = removeComillas(pathSaveJob);
-
-            System.out.println("Path save doc-->");
-            System.out.println(pathSaveJob);
 
 
             String filename = String.format("job_%s.pdf", jobid);
@@ -138,9 +88,6 @@ public class ReporteServlet extends HttpServlet {
                 fullPathFile = String.format("%s%s", pathSaveJob, filename);
             }
 
-
-            //TJobDocHome jobDocHome = new TJobDocHome(entityManager);
-            //jobDocHome.saveOrUpdate(Integer.valueOf(jobid), fullPathFile);
             restClient.saveOrUpdateDoc(emp_esquema, Integer.valueOf(jobid), filename);
 
             byte[] pdfBytes = JasperExportManager.exportReportToPdf(jasperPrint);

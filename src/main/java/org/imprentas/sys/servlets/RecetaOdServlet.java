@@ -19,8 +19,8 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet("/RecetaServlet")
-public class RecetaServlet extends HttpServlet {
+@WebServlet("/RecetaOdServlet")
+public class RecetaOdServlet extends HttpServlet {
 
     private static final Log log = LogFactory.getLog(RecetaServlet.class);
 
@@ -28,22 +28,23 @@ public class RecetaServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
-            String tkid = request.getParameter("ccm");
+            String recid = request.getParameter("rec");
             String esquema = request.getParameter("sqm");
 
             EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
-            String pathReporte = paramshome.getParamValue(esquema, "rutaReceta");
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoRec");
+            String pathFondo = paramshome.getParamValue(esquema, "pathFondoRecOd");
 
             Map parametros = new HashMap();
-            parametros.put("pcod_consulta", Integer.valueOf(tkid));
-            parametros.put("esquema", esquema);
+            parametros.put("pcod_receta", Integer.valueOf(recid));
             parametros.put("pathfondo", pathFondo);
+            parametros.put("esquema", esquema);
+
+            String pathTemp = paramshome.getParamValue(esquema, "rutaRecetaOd");
 
             // Compila o template
-            JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
+            JasperReport jasperReport = JasperCompileManager.compileReport(pathTemp);
 
             Connection conexion = DbUtil.getDbConecction();
 

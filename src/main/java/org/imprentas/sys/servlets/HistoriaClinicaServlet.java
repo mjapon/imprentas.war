@@ -3,11 +3,8 @@ package org.imprentas.sys.servlets;
 import net.sf.jasperreports.engine.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.imprentas.sys.dao.TParamsHome;
 import org.imprentas.sys.util.DbUtil;
-import org.imprentas.sys.util.JPAUtil;
 
-import javax.persistence.EntityManager;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
@@ -19,51 +16,47 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet("/RecetaServlet")
-public class RecetaServlet extends HttpServlet {
+@WebServlet("/HistoriaClinicaServlet")
+public class HistoriaClinicaServlet extends HttpServlet {
 
-    private static final Log log = LogFactory.getLog(RecetaServlet.class);
+    private static final Log log = LogFactory.getLog(HistoriaClinicaServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
-            String tkid = request.getParameter("ccm");
-            String esquema = request.getParameter("sqm");
-
-            EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
-            TParamsHome paramshome = new TParamsHome(em);
-
-            String pathReporte = paramshome.getParamValue(esquema, "rutaReceta");
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoRec");
+            String tkid = request.getParameter("ch");
 
             Map parametros = new HashMap();
-            parametros.put("pcod_consulta", Integer.valueOf(tkid));
-            parametros.put("esquema", esquema);
-            parametros.put("pathfondo", pathFondo);
+            parametros.put("codhist", Integer.valueOf(tkid));
+
+            String rutaArchivo = "/opt/reportes/historiaClinicaJaime.jrxml";
 
             // Compila o template
-            JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
+            JasperReport jasperReport = JasperCompileManager.compileReport(rutaArchivo);
 
             Connection conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
+
             ServletOutputStream sos = response.getOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             response.setContentType("application/pdf");
-            response.setHeader("Content-disposition", "inline; filename=receta");
+            response.setHeader("Content-disposition","inline; filename=historiaClinica");
 
             sos.flush();
             sos.close();
             conexion.close();
-            em.close();
 
         } catch (Throwable ex) {
-            log.error(String.format("error al generar la receta: %s", ex.getMessage()));
-            System.out.println(String.format("error al generar la receta: %s", ex.getMessage()));
+            log.error(String.format("error al generar la historia clínica: %s", ex.getMessage()));
+            System.out.println(String.format("error al generar la historia clinica: %s", ex.getMessage()));
             ex.printStackTrace();
         }
     }
+
+
+
 }
