@@ -19,45 +19,44 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet("/RecetaServlet")
-public class RecetaServlet extends HttpServlet {
+@WebServlet("/PlanTratamientoServlet")
+public class PlanTratamientoServlet extends HttpServlet {
 
-    private static final Log log = LogFactory.getLog(RecetaServlet.class);
+    private static final Log log = LogFactory.getLog(HistoriaClinicaServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
-            String tkid = request.getParameter("ccm");
-            String esquema = request.getParameter("sqm");
-
             EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
-            String pathReporte = paramshome.getParamValue(esquema, "rutaReceta");
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoRec");
+            String tkid = request.getParameter("cod");
+            String esquema = request.getParameter("sqm");
+
+            String pathLogo = paramshome.getParamValue(esquema, "pathlogoplnod");
 
             Map parametros = new HashMap();
-            parametros.put("pcod_consulta", Integer.valueOf(tkid));
+            parametros.put("codpt", Integer.valueOf(tkid));
             parametros.put("esquema", esquema);
-            parametros.put("pathfondo", pathFondo);
+            parametros.put("pathlogo", pathLogo);
+
+            String rutaArchivo = paramshome.getParamValue(esquema, "pathPlanTrata");
 
             // Compila o template
-            JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
+            JasperReport jasperReport = JasperCompileManager.compileReport(rutaArchivo);
 
             Connection conexion = DbUtil.getDbConecction();
-
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-            String filename = "Receta_" + tkid + ".pdf";
-            String contentType = "inline; filename=\"" + filename + "\"";
+            ServletOutputStream sos = response.getOutputStream();
+            String filename = "inline; filename=PlanTratamiento" + tkid + ".pdf";
 
-            response.setContentType("application/pdf; name=\"" + filename + "\"");
-            response.setHeader("Content-disposition", contentType);
+            response.setContentType("application/pdf");
+            response.setHeader("Content-disposition", filename);
             response.setHeader("Pragma", "no-cache");
             response.setDateHeader("Expires", 0L);
 
-            ServletOutputStream sos = response.getOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             sos.flush();
@@ -66,9 +65,11 @@ public class RecetaServlet extends HttpServlet {
             em.close();
 
         } catch (Throwable ex) {
-            log.error(String.format("error al generar la receta: %s", ex.getMessage()));
-            System.out.println(String.format("error al generar la receta: %s", ex.getMessage()));
+            log.error(String.format("error al generar plan de tratamiento: %s", ex.getMessage()));
+            System.out.println(String.format("error al generar plan tratamiento: %s", ex.getMessage()));
             ex.printStackTrace();
         }
     }
+
+
 }

@@ -31,9 +31,6 @@ public class TicketServlet extends HttpServlet {
             Map parametros = new HashMap();
             parametros.put("ticketid", Integer.valueOf(tkid));
 
-            //InputStream inputStream = null;
-
-            //String rutaArchivo = "/Users/mjapon/JaspersoftWorkspace/MyReports/respaldoReportes/ticket2.jrxml";
             String rutaArchivo = "/opt/reportes/ticket2.jrxml";
 
             // Compila o template
@@ -48,9 +45,8 @@ public class TicketServlet extends HttpServlet {
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             response.setContentType("application/pdf");
-            response.setHeader("Content-disposition","inline; filename=ticket");
-
-
+            response.setHeader("Content-disposition", "inline; filename=ticket.pdf");
+            
             sos.flush();
             sos.close();
             conexion.close();

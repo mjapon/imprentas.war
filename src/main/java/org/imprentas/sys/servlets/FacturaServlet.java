@@ -19,8 +19,8 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet("/RecetaServlet")
-public class RecetaServlet extends HttpServlet {
+@WebServlet("/Factura")
+public class FacturaServlet extends HttpServlet {
 
     private static final Log log = LogFactory.getLog(RecetaServlet.class);
 
@@ -28,19 +28,17 @@ public class RecetaServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         try {
-            String tkid = request.getParameter("ccm");
+            String trncod = request.getParameter("trn");
             String esquema = request.getParameter("sqm");
 
             EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
-            String pathReporte = paramshome.getParamValue(esquema, "rutaReceta");
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoRec");
+            String pathReporte = paramshome.getParamValue(esquema, "pathReporteFact");
 
             Map parametros = new HashMap();
-            parametros.put("pcod_consulta", Integer.valueOf(tkid));
-            parametros.put("esquema", esquema);
-            parametros.put("pathfondo", pathFondo);
+            parametros.put("ptrncod", Integer.valueOf(trncod));
+            parametros.put("pesquema", esquema);
 
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
@@ -49,7 +47,7 @@ public class RecetaServlet extends HttpServlet {
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-            String filename = "Receta_" + tkid + ".pdf";
+            String filename = "Comprobante_" + trncod + ".pdf";
             String contentType = "inline; filename=\"" + filename + "\"";
 
             response.setContentType("application/pdf; name=\"" + filename + "\"");
@@ -66,9 +64,10 @@ public class RecetaServlet extends HttpServlet {
             em.close();
 
         } catch (Throwable ex) {
-            log.error(String.format("error al generar la receta: %s", ex.getMessage()));
-            System.out.println(String.format("error al generar la receta: %s", ex.getMessage()));
+            log.error(String.format("error al generar factura: %s", ex.getMessage()));
+            System.out.println(String.format("error al generar factura: %s", ex.getMessage()));
             ex.printStackTrace();
         }
     }
 }
+

@@ -8,38 +8,33 @@ import org.imprentas.sys.util.DbUtil;
 import org.imprentas.sys.util.JPAUtil;
 
 import javax.persistence.EntityManager;
-import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet("/RecetaServlet")
-public class RecetaServlet extends HttpServlet {
+@WebServlet("/RecetaEmptyServlet")
+public class RecetaEmptyServlet extends HttpServlet {
+    private static final Log log = LogFactory.getLog(RecetaEmptyServlet.class);
 
-    private static final Log log = LogFactory.getLog(RecetaServlet.class);
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
 
         try {
-            String tkid = request.getParameter("ccm");
             String esquema = request.getParameter("sqm");
 
             EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
-            String pathReporte = paramshome.getParamValue(esquema, "rutaReceta");
+            String pathReporte = paramshome.getParamValue(esquema, "rutaRecetaEmpty");
             String pathFondo = paramshome.getParamValue(esquema, "pathFondoRec");
 
             Map parametros = new HashMap();
-            parametros.put("pcod_consulta", Integer.valueOf(tkid));
-            parametros.put("esquema", esquema);
             parametros.put("pathfondo", pathFondo);
 
             // Compila o template
@@ -49,7 +44,7 @@ public class RecetaServlet extends HttpServlet {
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-            String filename = "Receta_" + tkid + ".pdf";
+            String filename = "Receta_vacia.pdf";
             String contentType = "inline; filename=\"" + filename + "\"";
 
             response.setContentType("application/pdf; name=\"" + filename + "\"");
@@ -66,8 +61,8 @@ public class RecetaServlet extends HttpServlet {
             em.close();
 
         } catch (Throwable ex) {
-            log.error(String.format("error al generar la receta: %s", ex.getMessage()));
-            System.out.println(String.format("error al generar la receta: %s", ex.getMessage()));
+            log.error(String.format("error al generar la receta vacia: %s", ex.getMessage()));
+            System.out.println(String.format("error al generar la receta vacia: %s", ex.getMessage()));
             ex.printStackTrace();
         }
     }
