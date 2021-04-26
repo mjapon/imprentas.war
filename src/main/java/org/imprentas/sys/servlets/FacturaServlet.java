@@ -33,12 +33,20 @@ public class FacturaServlet extends HttpServlet {
 
             EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
+            Boolean isNotaVenta = paramshome.isNotaVenta(esquema, Integer.valueOf(trncod));
+            String pathFondo = paramshome.getParamValue(esquema, "pathFondoNotaV");
 
-            String pathReporte = paramshome.getParamValue(esquema, "pathReporteFact");
+            String paramTemplate = "pathReporteFact";
+            if (isNotaVenta) {
+                paramTemplate = "pathReporteNotaV";
+            }
+
+            String pathReporte = paramshome.getParamValue(esquema, paramTemplate);
 
             Map parametros = new HashMap();
             parametros.put("ptrncod", Integer.valueOf(trncod));
             parametros.put("pesquema", esquema);
+            parametros.put("pathfondo", pathFondo);
 
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);

@@ -1,5 +1,6 @@
 package org.imprentas.sys.dao;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.imprentas.sys.entity.TparamsEntity;
@@ -50,6 +51,37 @@ public class TParamsHome {
         }
 
         return result;
+    }
+
+    public Integer getTraCodigo(String esquema, Integer trncodigo) {
+        try {
+            Integer tracodigo = 0;
+            String queryStr = String.format("select tra_codigo, trn_codigo from %s.tasiento where trn_codigo = %s ",
+                    String.valueOf(esquema),
+                    String.valueOf(trncodigo));
+            Query query = entityManager.createNativeQuery(queryStr);
+            Object[] res = (Object[]) query.getSingleResult();
+            if (res != null) {
+                tracodigo = Integer.valueOf(String.valueOf(res[0]));
+            }
+            return tracodigo;
+        } catch (RuntimeException re) {
+            log.error("Error al obtener datos de la factura", re);
+            throw re;
+        }
+    }
+
+    public Boolean isNotaVenta(String esquema, Integer trncodigo) {
+        Boolean isNotaVenta = Boolean.FALSE;
+        try {
+            Integer tra_codigo = getTraCodigo(esquema, trncodigo);
+            if (tra_codigo.intValue() == 2) {
+                isNotaVenta = Boolean.TRUE;
+            }
+        } catch (Throwable ex) {
+            log.error("Error al tratar de verificar el tipo de transaccion", ex);
+        }
+        return isNotaVenta;
     }
 
 
