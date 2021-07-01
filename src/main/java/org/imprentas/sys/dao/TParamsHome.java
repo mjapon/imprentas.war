@@ -1,8 +1,8 @@
 package org.imprentas.sys.dao;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.imprentas.sys.entity.TReporteEntity;
 import org.imprentas.sys.entity.TparamsEntity;
 
 import javax.persistence.EntityManager;
@@ -69,6 +69,29 @@ public class TParamsHome {
             log.error("Error al obtener datos de la factura", re);
             throw re;
         }
+    }
+
+    public TReporteEntity getDatosReporte(Integer repId, String esquema){
+        String queryStr = String.format("select rep_id, rep_nombre, rep_jasper, rep_detalle, rep_params, rep_cat from %s.treporte where rep_id = %s ",
+                String.valueOf(esquema),
+                String.valueOf(repId));
+        System.out.println("Sql es:");
+        System.out.println(queryStr);
+        Query query = entityManager.createNativeQuery(queryStr);
+        Object[] res = (Object[]) query.getSingleResult();
+        TReporteEntity reporteEntity = null;
+
+        if (res != null) {
+            Integer _repId = Integer.valueOf(String.valueOf(res[0]));
+            String _repNombre = String.valueOf(res[1]);
+            String _repJasper = String.valueOf(res[2]);
+            String _repDetalles = String.valueOf(res[3]);
+            String _repParams = String.valueOf(res[4]);
+            Integer _repCat = Integer.valueOf(String.valueOf(res[5]));
+
+            reporteEntity = new TReporteEntity(_repId, _repNombre, _repJasper,_repDetalles, _repParams, _repCat);
+        }
+        return reporteEntity;
     }
 
     public Boolean isNotaVenta(String esquema, Integer trncodigo) {
