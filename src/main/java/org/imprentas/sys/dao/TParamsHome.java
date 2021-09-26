@@ -7,7 +7,9 @@ import org.imprentas.sys.entity.TparamsEntity;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TParamsHome {
 
@@ -41,8 +43,14 @@ public class TParamsHome {
         return null;
     }
 
-    public String getParamValue(String esquema, String prmabrev) {
-        String sql = "select tprm_val from " + esquema + ".tparams where tprm_abrev='" + prmabrev + "';";
+
+    private String auxGetParamValue(String schema, String paramAbr, String section) {
+        String whereSection = " and tprm_seccion = 0";
+        if (section != null && !section.trim().isEmpty()) {
+            whereSection = String.format(" and tprm_seccion = %s", section);
+        }
+
+        String sql = String.format("select tprm_val from %s.tparams where tprm_abrev='%s' %s", schema, paramAbr, whereSection);
         String result = "";
 
         List<String> res = this.entityManager.createNativeQuery(sql).getResultList();
@@ -50,6 +58,19 @@ public class TParamsHome {
             result = res.get(0);
         }
 
+        return result;
+
+    }
+
+    public String getParamValue(String esquema, String prmabrev) {
+        return this.auxGetParamValue(esquema, prmabrev, null);
+    }
+
+    public String getParamValue(String esquema, String prmabrev, String section) {
+        String result = this.auxGetParamValue(esquema, prmabrev, section);
+        if (result == null || result.trim().isEmpty()) {
+            result = this.auxGetParamValue(esquema, prmabrev, null);
+        }
         return result;
     }
 
@@ -71,7 +92,25 @@ public class TParamsHome {
         }
     }
 
-    public TReporteEntity getDatosReporte(Integer repId, String esquema){
+    public Map<String, Object> getTransaccData(String schema, Integer trncod) {
+        try {
+            String sql = String.format("select tra_codigo, sec_codigo from %s.tasiento where trn_codigo = %d",
+                    schema, trncod);
+            Object[] result = (Object[]) entityManager.createNativeQuery(sql).getSingleResult();
+            Map resultMap = new HashMap();
+            if (result != null) {
+                resultMap.put("tra_codigo", result[0]);
+                resultMap.put("sec_codigo", result[1]);
+            }
+            return resultMap;
+
+        } catch (RuntimeException ex) {
+            log.error("Error al recuperar datos de transaccion", ex);
+            throw ex;
+        }
+    }
+
+    public TReporteEntity getDatosReporte(Integer repId, String esquema) {
         String queryStr = String.format("select rep_id, rep_nombre, rep_jasper, rep_detalle, rep_params, rep_cat from %s.treporte where rep_id = %s ",
                 String.valueOf(esquema),
                 String.valueOf(repId));
@@ -89,7 +128,7 @@ public class TParamsHome {
             String _repParams = String.valueOf(res[4]);
             Integer _repCat = Integer.valueOf(String.valueOf(res[5]));
 
-            reporteEntity = new TReporteEntity(_repId, _repNombre, _repJasper,_repDetalles, _repParams, _repCat);
+            reporteEntity = new TReporteEntity(_repId, _repNombre, _repJasper, _repDetalles, _repParams, _repCat);
         }
         return reporteEntity;
     }
@@ -107,5 +146,9 @@ public class TParamsHome {
         return isNotaVenta;
     }
 
+    public Boolean isNotaVenta(Map<String, Object> transaccDataMap) {
+        Integer tra_codigo = Integer.valueOf(String.valueOf(transaccDataMap.get("tra_codigo")));
+        return tra_codigo.intValue() == 2;
+    }
 
 }

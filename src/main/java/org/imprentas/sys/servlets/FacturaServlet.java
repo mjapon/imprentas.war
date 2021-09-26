@@ -33,15 +33,18 @@ public class FacturaServlet extends HttpServlet {
 
             EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
-            Boolean isNotaVenta = paramshome.isNotaVenta(esquema, Integer.valueOf(trncod));
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoNotaV");
+            Map<String, Object> trnDataMap = paramshome.getTransaccData(esquema, Integer.valueOf(trncod));
+            String secCodigo = String.valueOf(trnDataMap.get("sec_codigo"));
+
+            Boolean isNotaVenta = paramshome.isNotaVenta(trnDataMap);
+            String pathFondo = paramshome.getParamValue(esquema, "pathFondoNotaV", secCodigo);
 
             String paramTemplate = "pathReporteFact";
             if (isNotaVenta) {
                 paramTemplate = "pathReporteNotaV";
             }
 
-            String pathReporte = paramshome.getParamValue(esquema, paramTemplate);
+            String pathReporte = paramshome.getParamValue(esquema, paramTemplate, secCodigo);
 
             Map parametros = new HashMap();
             parametros.put("ptrncod", Integer.valueOf(trncod));
