@@ -36,8 +36,11 @@ public class AbonoServlet extends HttpServlet {
 
             String paramTemplate = "pathReporteAbo";
 
+            Map<String, Object> trnDataMap = paramshome.getTransaccData(esquema, Integer.valueOf(trncod));
+            String secCodigo = String.valueOf(trnDataMap.get("sec_codigo"));
+
             String pathReporte = paramshome.getParamValue(esquema, paramTemplate);
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoAbo");
+            String pathFondo = paramshome.getParamValue(esquema, "pathFondoAbo", secCodigo);
 
             Map parametros = new HashMap();
             parametros.put("ptrncod", Integer.valueOf(trncod));
