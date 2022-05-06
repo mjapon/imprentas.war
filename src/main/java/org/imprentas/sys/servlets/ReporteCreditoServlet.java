@@ -7,22 +7,19 @@ import org.imprentas.sys.dao.TParamsHome;
 import org.imprentas.sys.util.DbUtil;
 import org.imprentas.sys.util.JPAUtil;
 
-import javax.persistence.EntityManager;
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 
-@WebServlet("/Abono")
-public class AbonoServlet extends BaseJasperServlet {
+@WebServlet("/ReporteCreditoServlet")
+public class ReporteCreditoServlet extends BaseJasperServlet {
 
-    private static final Log log = LogFactory.getLog(AbonoServlet.class);
+    private static final Log log = LogFactory.getLog(ReporteCreditoServlet.class);
+
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -30,33 +27,27 @@ public class AbonoServlet extends BaseJasperServlet {
         this.clearConn();
 
         try {
-            String trncod = request.getParameter("trn");
+            String codcred = request.getParameter("cred");
             String esquema = request.getParameter("sqm");
 
-            this.em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
+
+            em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
-            String paramTemplate = "pathReporteAbo";
-
-            Map<String, Object> trnDataMap = paramshome.getTransaccData(esquema, Integer.valueOf(trncod));
-            String secCodigo = String.valueOf(trnDataMap.get("sec_codigo"));
-
-            String pathReporte = paramshome.getParamValue(esquema, paramTemplate);
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoAbo", secCodigo);
-
             Map parametros = new HashMap();
-            parametros.put("ptrncod", Integer.valueOf(trncod));
             parametros.put("pesquema", esquema);
-            parametros.put("pathfondo", pathFondo);
+            parametros.put("pcredid", Integer.valueOf(codcred));
 
-            // Compila o template
+            String paramTemplate = "pathReportCred";
+            String pathReporte = paramshome.getParamValue(esquema, paramTemplate);
+
             JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
 
-            this.conexion = DbUtil.getDbConecction();
+            conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-            String filename = "Abono_" + trncod + ".pdf";
+            String filename = "ReporteCred_" + codcred + ".pdf";
             String contentType = "inline; filename=\"" + filename + "\"";
 
             response.setContentType("application/pdf; name=\"" + filename + "\"");
@@ -64,19 +55,18 @@ public class AbonoServlet extends BaseJasperServlet {
             response.setHeader("Pragma", "no-cache");
             response.setDateHeader("Expires", 0L);
 
-            this.sos = response.getOutputStream();
+            sos = response.getOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             sos.flush();
 
         } catch (Throwable ex) {
-            log.error(String.format("error al generar factura: %s", ex.getMessage()));
-            System.out.println(String.format("error al generar factura: %s", ex.getMessage()));
+            log.error(String.format("error al generar el servlet del reporte credito: %s", ex.getMessage()));
+            System.out.println(String.format("error al generar el servlet del reporte credito: %s", ex.getMessage()));
             ex.printStackTrace();
         } finally {
             this.closeConn();
         }
+
     }
-
-
 }

@@ -20,13 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet("/HistoriaClinicaServlet")
-public class HistoriaClinicaServlet extends HttpServlet {
+public class HistoriaClinicaServlet extends BaseJasperServlet {
 
     private static final Log log = LogFactory.getLog(HistoriaClinicaServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        this.clearConn();
         try {
             String tkid = request.getParameter("ch");
 
@@ -36,7 +36,7 @@ public class HistoriaClinicaServlet extends HttpServlet {
             String esquema = request.getParameter("sqm");
             parametros.put("esquema", esquema);
 
-            EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
+            this.em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
             String rutaArchivo = paramshome.getParamValue(esquema, "pathReporteHC");
@@ -44,12 +44,12 @@ public class HistoriaClinicaServlet extends HttpServlet {
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(rutaArchivo);
 
-            Connection conexion = DbUtil.getDbConecction();
+            this.conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
 
-            ServletOutputStream sos = response.getOutputStream();
+            this.sos = response.getOutputStream();
             String filename = "inline; filename=HistoriaClinica" + tkid + ".pdf";
 
             response.setContentType("application/pdf");
@@ -60,14 +60,13 @@ public class HistoriaClinicaServlet extends HttpServlet {
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             sos.flush();
-            sos.close();
-            conexion.close();
-            em.close();
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar la historia clínica: %s", ex.getMessage()));
             System.out.println(String.format("error al generar la historia clinica: %s", ex.getMessage()));
             ex.printStackTrace();
+        } finally {
+            this.closeConn();
         }
     }
 

@@ -20,18 +20,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet("/RecetaServlet")
-public class RecetaServlet extends HttpServlet {
+public class RecetaServlet extends BaseJasperServlet {
 
     private static final Log log = LogFactory.getLog(RecetaServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        this.clearConn();
         try {
             String tkid = request.getParameter("ccm");
             String esquema = request.getParameter("sqm");
 
-            EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
+            this.em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
             String pathReporte = paramshome.getParamValue(esquema, "rutaReceta");
@@ -45,7 +45,7 @@ public class RecetaServlet extends HttpServlet {
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
 
-            Connection conexion = DbUtil.getDbConecction();
+            this.conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
@@ -57,18 +57,17 @@ public class RecetaServlet extends HttpServlet {
             response.setHeader("Pragma", "no-cache");
             response.setDateHeader("Expires", 0L);
 
-            ServletOutputStream sos = response.getOutputStream();
+            this.sos = response.getOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             sos.flush();
-            sos.close();
-            conexion.close();
-            em.close();
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar la receta: %s", ex.getMessage()));
             System.out.println(String.format("error al generar la receta: %s", ex.getMessage()));
             ex.printStackTrace();
+        } finally {
+            this.closeConn();
         }
     }
 }

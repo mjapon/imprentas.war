@@ -19,12 +19,14 @@
         <maven.compiler.target>1.7</maven.compiler.target>
     </properties>
 
+    <!--
     <pluginRepositories>
         <pluginRepository>
             <id>jasperreport-artifactory</id>
             <url>https://jaspersoft.jfrog.io/artifactory/third-party-ce-artifacts</url>
         </pluginRepository>
     </pluginRepositories>
+    -->
 
     <dependencies>
         <dependency>
@@ -46,7 +48,7 @@
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>6.5.0</version>
+            <version>6.19.0</version>
         </dependency>
 
         <dependency>

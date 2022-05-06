@@ -114,8 +114,6 @@ public class TParamsHome {
         String queryStr = String.format("select rep_id, rep_nombre, rep_jasper, rep_detalle, rep_params, rep_cat from %s.treporte where rep_id = %s ",
                 String.valueOf(esquema),
                 String.valueOf(repId));
-        System.out.println("Sql es:");
-        System.out.println(queryStr);
         Query query = entityManager.createNativeQuery(queryStr);
         Object[] res = (Object[]) query.getSingleResult();
         TReporteEntity reporteEntity = null;

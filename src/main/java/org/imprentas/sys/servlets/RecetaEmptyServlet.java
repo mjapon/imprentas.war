@@ -18,17 +18,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet("/RecetaEmptyServlet")
-public class RecetaEmptyServlet extends HttpServlet {
+public class RecetaEmptyServlet extends BaseJasperServlet {
     private static final Log log = LogFactory.getLog(RecetaEmptyServlet.class);
 
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-
+        this.clearConn();
         try {
             String esquema = request.getParameter("sqm");
 
-            EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
+            this.em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
             String pathReporte = paramshome.getParamValue(esquema, "rutaRecetaEmpty");
@@ -40,7 +40,7 @@ public class RecetaEmptyServlet extends HttpServlet {
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
 
-            Connection conexion = DbUtil.getDbConecction();
+            this.conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
@@ -52,18 +52,17 @@ public class RecetaEmptyServlet extends HttpServlet {
             response.setHeader("Pragma", "no-cache");
             response.setDateHeader("Expires", 0L);
 
-            ServletOutputStream sos = response.getOutputStream();
+            this.sos = response.getOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             sos.flush();
-            sos.close();
-            conexion.close();
-            em.close();
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar la receta vacia: %s", ex.getMessage()));
             System.out.println(String.format("error al generar la receta vacia: %s", ex.getMessage()));
             ex.printStackTrace();
+        } finally {
+            this.closeConn();
         }
     }
 }

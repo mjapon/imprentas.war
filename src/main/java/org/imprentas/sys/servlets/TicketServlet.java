@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet("/TicketServlet")
-public class TicketServlet extends HttpServlet {
+public class TicketServlet extends BaseJasperServlet {
 
     private static final Log log = LogFactory.getLog(TicketServlet.class);
 
@@ -25,6 +25,7 @@ public class TicketServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
+        this.clearConn();
         try {
             String tkid = request.getParameter("tkid");
 
@@ -36,25 +37,24 @@ public class TicketServlet extends HttpServlet {
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(rutaArchivo);
 
-            Connection conexion = DbUtil.getDbConecction();
+            this.conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-
-            ServletOutputStream sos = response.getOutputStream();
+            this.sos = response.getOutputStream();
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             response.setContentType("application/pdf");
             response.setHeader("Content-disposition", "inline; filename=ticket.pdf");
-            
+
             sos.flush();
-            sos.close();
-            conexion.close();
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar el ticket: %s", ex.getMessage()));
             System.out.println(String.format("error al generar el ticket: %s", ex.getMessage()));
             ex.printStackTrace();
+        } finally {
+            this.closeConn();
         }
     }
 

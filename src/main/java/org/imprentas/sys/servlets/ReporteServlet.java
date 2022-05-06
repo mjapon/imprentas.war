@@ -29,13 +29,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet("/ReporteServlet")
-public class ReporteServlet extends HttpServlet {
+public class ReporteServlet extends BaseJasperServlet {
 
     private static final Log log = LogFactory.getLog(ReporteServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) {
 
+        this.clearConn();
         try {
             String esquema = request.getParameter("sqm");
             String codrep = request.getParameter("codrep");
@@ -47,7 +48,7 @@ public class ReporteServlet extends HttpServlet {
             String pfmt = request.getParameter("fmt");
             String labelParams = request.getParameter("labelparams");
 
-            EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
+            em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
             TReporteEntity reporte = paramshome.getDatosReporte(Integer.valueOf(codrep), esquema);
@@ -68,7 +69,7 @@ public class ReporteServlet extends HttpServlet {
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(pathReporte);
 
-            Connection conexion = DbUtil.getDbConecction();
+            this.conexion = DbUtil.getDbConecction();
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
             String contentType = "application/pdf;";
@@ -134,6 +135,8 @@ public class ReporteServlet extends HttpServlet {
             log.error(String.format("error al generar reporte: %s", ex.getMessage()));
             System.out.println(String.format("error al generarrepñorte : %s", ex.getMessage()));
             ex.printStackTrace();
+        } finally {
+            this.closeConn();
         }
     }
 }

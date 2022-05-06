@@ -20,15 +20,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 @WebServlet("/PlanTratamientoServlet")
-public class PlanTratamientoServlet extends HttpServlet {
+public class PlanTratamientoServlet extends BaseJasperServlet {
 
     private static final Log log = LogFactory.getLog(HistoriaClinicaServlet.class);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+        this.clearConn();
         try {
-            EntityManager em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
+            this.em = JPAUtil.getEntityManagerFactoryComp().createEntityManager();
             TParamsHome paramshome = new TParamsHome(em);
 
             String tkid = request.getParameter("cod");
@@ -46,10 +46,10 @@ public class PlanTratamientoServlet extends HttpServlet {
             // Compila o template
             JasperReport jasperReport = JasperCompileManager.compileReport(rutaArchivo);
 
-            Connection conexion = DbUtil.getDbConecction();
+            this.conexion = DbUtil.getDbConecction();
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parametros, conexion);
 
-            ServletOutputStream sos = response.getOutputStream();
+            this.sos = response.getOutputStream();
             String filename = "inline; filename=PlanTratamiento" + tkid + ".pdf";
 
             response.setContentType("application/pdf");
@@ -60,14 +60,13 @@ public class PlanTratamientoServlet extends HttpServlet {
             JasperExportManager.exportReportToPdfStream(jasperPrint, sos);
 
             sos.flush();
-            sos.close();
-            conexion.close();
-            em.close();
 
         } catch (Throwable ex) {
             log.error(String.format("error al generar plan de tratamiento: %s", ex.getMessage()));
             System.out.println(String.format("error al generar plan tratamiento: %s", ex.getMessage()));
             ex.printStackTrace();
+        } finally {
+            this.closeConn();
         }
     }
 
