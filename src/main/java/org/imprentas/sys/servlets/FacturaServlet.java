@@ -37,10 +37,11 @@ public class FacturaServlet extends BaseJasperServlet {
             String secCodigo = String.valueOf(trnDataMap.get("sec_codigo"));
 
             Boolean isNotaVenta = paramshome.isNotaVenta(trnDataMap);
-            String pathFondo = paramshome.getParamValue(esquema, "pathFondoNotaV", secCodigo);
+            String pathFondo = paramshome.getParamValue(esquema, "pathFondoFact", secCodigo);
 
             String paramTemplate = "pathReporteFact";
             if (isNotaVenta) {
+                pathFondo = paramshome.getParamValue(esquema, "pathFondoNotaV", secCodigo);
                 paramTemplate = "pathReporteNotaV";
             }
 
